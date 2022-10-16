@@ -1,0 +1,12 @@
+{
+  "name": "driver",
+  "type": "tools",
+  "version": "1.0.0",
+  "description": "驱动模块",
+  "bin": [],
+  "keywords": [
+    "sunday",
+    "tools"
+  ],
+  "author": "ct"
+}
