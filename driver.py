@@ -3,13 +3,14 @@ import platform
 import time
 import queue
 import threading
-from selenium import webdriver
+from seleniumwire import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from sunday.core import Logger
 from functools import partial
+from pydash import once
 
 logger = Logger('DRIVER').getLogger()
 class Driver():
@@ -17,6 +18,10 @@ class Driver():
         # targetUrl = http://ip:port/wd/hub
         self.taskq = queue.Queue()
         self.init(*args, **kwargs)
+        self.info = {
+                'debugger': False,
+                'isRun': False,
+                }
 
     def init(self, driverWait=20, implicitlyWait=15, arguments=[], targetUrl=None):
         logger.info('初始化驱动')
@@ -30,7 +35,12 @@ class Driver():
             )
         else:
             options = webdriver.ChromeOptions()
-            for argument in arguments: options.add_argument(argument)
+            for argument in arguments:
+                options.add_argument(argument)
+            options.add_argument('disable-infobars')
+            options.add_argument('--disable-extensions')
+            options.add_argument('--no-sandbox')
+            options.add_argument('--ignore-certificate-errors')
             # options.add_argument("--proxy-server=127.0.0.1:7758")
             # options.add_argument('headless')
             # options.add_argument('--no-sandbox')
@@ -50,13 +60,28 @@ class Driver():
     def empty(self):
         return self.taskq.empty()
 
+    def getIsRun(self):
+        if hasattr(self, 'info'):
+            return self.info['isRun']
+        else:
+            logger.error('info未找到')
+            return False
+
+    def setIsRun(self, isRun):
+        self.info['isRun'] = isRun
+
     def taskRun(self):
         logger.debug('队列运行ing')
+        def close():
+            logger.debug('任务结束')
+            self.setIsRun(False)
         while True:
-            if not self.empty():
-                logger.debug('队列执行, 当前等待任务数：%s' % self.taskq.qsize())
+            if self.getIsRun() == False and not self.empty():
                 task = self.taskq.get()
-                if callable(task): task()
+                if callable(task):
+                    logger.debug('任务开始, 当前等待任务数：%s' % self.taskq.qsize())
+                    self.setIsRun(True)
+                    task(close=once(close))
             else:
                 time.sleep(0.5)
 
