@@ -23,11 +23,18 @@ class Driver():
                 'isRun': False,
                 }
 
+    def add_common_argument(self, options):
+        options.add_argument('disable-infobars')
+        options.add_argument('--disable-extensions')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--ignore-certificate-errors')
+
     def init(self, driverWait=20, implicitlyWait=15, arguments=[], targetUrl=None, proxy_host=None, proxy_port=None):
         logger.info('初始化驱动')
         pwd = os.path.dirname(os.path.abspath(__file__))
         if targetUrl:
             firefox_options = webdriver.FirefoxOptions()
+            self.add_common_argument(firefox_options)
             options = None
             if proxy_host and proxy_port:
                 options = {
@@ -46,12 +53,9 @@ class Driver():
             self.driver = webdriver.Remote(**self.initConfig)
         else:
             options = webdriver.ChromeOptions()
+            self.add_common_argument(options)
             for argument in arguments:
                 options.add_argument(argument)
-            options.add_argument('disable-infobars')
-            options.add_argument('--disable-extensions')
-            options.add_argument('--no-sandbox')
-            options.add_argument('--ignore-certificate-errors')
             # options.add_argument("--proxy-server=127.0.0.1:7758")
             # options.add_argument('headless')
             # options.add_argument('--no-sandbox')
