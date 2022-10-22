@@ -37,12 +37,13 @@ class Driver():
                             },
                         'addr': proxy_host
                         }
-            self.driver = webdriver.Remote(
-                command_executor=targetUrl,
-                desired_capabilities=DesiredCapabilities.FIREFOX,
-                options=firefox_options,
-                seleniumwire_options=options,
-            )
+            self.initConfig = {
+                    'command_executor': targetUrl,
+                    'desired_capabilities': DesiredCapabilities.FIREFOX,
+                    'options': firefox_options,
+                    'seleniumwire_options': options,
+                    }
+            self.driver = webdriver.Remote(**self.initConfig)
         else:
             options = webdriver.ChromeOptions()
             for argument in arguments:
@@ -80,6 +81,13 @@ class Driver():
     def setIsRun(self, isRun):
         self.info['isRun'] = isRun
 
+    def checkAlive(self):
+        try:
+            self.driver.title
+        except Exception as e:
+            logger.warning('远程驱动链接超时，重新链接')
+            self.driver = webdriver.Remote(**self.initConfig)
+
     def taskRun(self):
         logger.debug('队列运行ing')
         def close():
@@ -87,16 +95,17 @@ class Driver():
             self.setIsRun(False)
         while True:
             if self.getIsRun() == False and not self.empty():
+                self.checkAlive()
                 task = self.taskq.get()
                 if callable(task):
                     logger.debug('任务开始, 当前等待任务数：%s' % self.taskq.qsize())
                     self.setIsRun(True)
-                    task(close=once(close))
+                    task(driver=self.driver, close=once(close))
             else:
                 time.sleep(0.5)
 
     def addTask(self, task, *params):
-        self.taskq.put(partial(task, self.driver, *params))
+        self.taskq.put(partial(task, *params))
 
     def initTabs(self, num):
         while len(self.driver.window_handles) < num:
