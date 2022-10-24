@@ -90,8 +90,10 @@ class Driver():
     def taskRun(self):
         logger.debug('队列运行ing')
         def close():
-            logger.debug('任务结束')
+            self.driver.execute_script('window.localStorage.clear()')
+            self.driver.execute_script('window.sessionStorage.clear()')
             self.setIsRun(False)
+            logger.debug('任务结束')
         while True:
             if self.getIsRun() == False and not self.empty():
                 self.checkAlive()
