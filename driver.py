@@ -30,20 +30,20 @@ class Driver():
         options.add_argument('--ignore-certificate-errors')
 
     def init(self, driverWait=20, implicitlyWait=15, arguments=[], targetUrl=None, proxy_host=None, proxy_port=None):
-        logger.info('初始化驱动')
         pwd = os.path.dirname(os.path.abspath(__file__))
+        options = None
+        if proxy_host and proxy_port:
+            options = {
+                    'proxy': {
+                        'http': f'http://{proxy_host}:{proxy_port}',
+                        'https': f'https://{proxy_host}:{proxy_port}',
+                        },
+                    'addr': proxy_host
+                    }
+        logger.info('初始化驱动, wire配置：%s' % options)
         if targetUrl:
             firefox_options = webdriver.FirefoxOptions()
             self.add_common_argument(firefox_options)
-            options = None
-            if proxy_host and proxy_port:
-                options = {
-                        'proxy': {
-                            'http': f'http://{proxy_host}:{proxy_port}',
-                            'https': f'https://{proxy_host}:{proxy_port}',
-                            },
-                        'addr': proxy_host
-                        }
             self.initConfig = {
                     'command_executor': targetUrl,
                     'desired_capabilities': DesiredCapabilities.FIREFOX,
@@ -52,19 +52,13 @@ class Driver():
                     }
             self.driver = webdriver.Remote(**self.initConfig)
         else:
-            options = webdriver.ChromeOptions()
-            self.add_common_argument(options)
+            chrome_options = webdriver.ChromeOptions()
+            self.add_common_argument(chrome_options)
             for argument in arguments:
                 options.add_argument(argument)
-            # options.add_argument("--proxy-server=127.0.0.1:7758")
-            # options.add_argument('headless')
-            # options.add_argument('--no-sandbox')
-            # options.add_argument('--disable-dev-shm-usage')
-            # options.add_argument("--auto-open-devtools-for-tabs")
-            # options.set_capability("browserVersion", "67")
-            # options.set_capability("platformName", "Windows XP")
             self.driver = webdriver.Chrome(
-                    options=options,
+                    options=chrome_options,
+                    seleniumwire_options=options,
                     executable_path=os.path.join(pwd, 'driver', 'chromedriver-%s' % platform.system().lower()))
         self.driver.implicitly_wait(implicitlyWait)
         self.wait = WebDriverWait(self.driver, driverWait)
