@@ -29,7 +29,7 @@ class Driver():
         options.add_argument('--no-sandbox')
         options.add_argument('--ignore-certificate-errors')
 
-    def init(self, driverWait=20, implicitlyWait=15, arguments=[], targetUrl=None, proxy_host=None, proxy_port=None):
+    def init(self, driverWait=20, implicitlyWait=15, arguments=[], targetUrl=None, proxy_host=None, proxy_port=None, wire_host=None):
         pwd = os.path.dirname(os.path.abspath(__file__))
         options = None
         if proxy_host and proxy_port:
@@ -38,8 +38,9 @@ class Driver():
                         'http': f'http://{proxy_host}:{proxy_port}',
                         'https': f'https://{proxy_host}:{proxy_port}',
                         },
-                    'addr': proxy_host
                     }
+            if wire_host:
+                options['addr'] = wire_host
         logger.info('初始化驱动, wire配置：%s' % options)
         if targetUrl:
             firefox_options = webdriver.FirefoxOptions()
