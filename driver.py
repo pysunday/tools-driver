@@ -3,6 +3,7 @@ import platform
 import time
 import queue
 import threading
+import copy
 from seleniumwire import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -24,7 +25,6 @@ class Driver():
                 }
 
     def add_common_argument(self, options):
-        options.add_argument('disable-infobars')
         options.add_argument('--disable-extensions')
         options.add_argument('--no-sandbox')
         options.add_argument('--ignore-certificate-errors')
@@ -51,7 +51,7 @@ class Driver():
                     'options': firefox_options,
                     'seleniumwire_options': options,
                     }
-            self.driver = webdriver.Remote(**self.initConfig)
+            self.driver = webdriver.Remote(**copy.deepcopy(self.initConfig))
         else:
             chrome_options = webdriver.ChromeOptions()
             self.add_common_argument(chrome_options)
@@ -85,7 +85,7 @@ class Driver():
             self.driver.title
         except Exception as e:
             logger.warning('远程驱动链接超时，重新链接')
-            self.driver = webdriver.Remote(**self.initConfig)
+            self.driver = webdriver.Remote(**copy.deepcopy(self.initConfig))
 
     def taskRun(self):
         logger.debug('队列运行ing')
