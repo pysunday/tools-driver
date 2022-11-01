@@ -56,7 +56,7 @@ class Driver():
             chrome_options = webdriver.ChromeOptions()
             self.add_common_argument(chrome_options)
             for argument in arguments:
-                options.add_argument(argument)
+                chrome_options.add_argument(argument)
             self.driver = webdriver.Chrome(
                     options=chrome_options,
                     seleniumwire_options=options,
@@ -92,6 +92,7 @@ class Driver():
         def close():
             self.driver.execute_script('window.localStorage.clear()')
             self.driver.execute_script('window.sessionStorage.clear()')
+            self.driver.get('about:blank')
             self.setIsRun(False)
             logger.debug('任务结束')
         while True:
